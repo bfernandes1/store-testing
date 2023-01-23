@@ -1,31 +1,49 @@
-import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
+import { TestBed } from "@angular/core/testing";
+import { MockStore, provideMockStore } from "@ngrx/store/testing";
+import { selectBooks } from "./state/books.selector";
 
-describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
+describe('AppComponent reset selectors', () => {
+  let store: MockStore;
+
+  afterEach(() => {
+    store?.resetSelectors();
+  });
+
+  it('should return the mocked value', (done: any) => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideMockStore({
+          selectors: [
+            {
+              selector: selectBooks,
+              value: [
+                {
+                  id: 'mockedId',
+                  volumeInfo: {
+                    title: 'Mocked Title',
+                    authors: ['Mocked Author'],
+                  },
+                },
+              ],
+            },
+          ],
+        }),
       ],
-    }).compileComponents();
-  });
+    });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+    store = TestBed.inject(MockStore);
 
-  it(`should have as title 'untitled'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('untitled');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('untitled app is running!');
+    store.select(selectBooks).subscribe((mockBooks) => {
+      expect(mockBooks).toEqual([
+        {
+          id: 'mockedId',
+          volumeInfo: {
+            title: 'Mocked Title',
+            authors: ['Mocked Author'],
+          },
+        },
+      ]);
+      done();
+    });
   });
 });
