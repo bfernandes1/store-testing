@@ -114,15 +114,22 @@ describe('getBooks$ effect', () => {
     let book: Book = { id: '1', volumeInfo: { title: 'Book 1', authors: ['Mocked Author'] } };
     const mockBooks = [book];
 
+    // create an action to dispatch to the store
     const action = retrieveBooksListAction();
+    // create the expected outcome, which is the success action with the books data
     const outcome = retrieveBooksListSuccessAction({ books: mockBooks });
 
+    // set the actions stream to the retrieveBooksListAction
     actions.stream = hot('-a', { a: action });
+    // mock the service's getBooks method to return the mock books data
     const response = cold('-a|', { a: mockBooks });
+    // set the expected outcome for the getBooks$ observable
     const expected = cold('--b', { b: outcome });
     booksService.getBooks = jest.fn(() => response);
 
+    // assert that the getBooks$ observable emits the expected outcome
     expect(booksEffects.getBooks$).toBeObservable(expected);
+    // assert that the booksService's getBooks method was called
     expect(booksService.getBooks).toHaveBeenCalled();
   });
 
@@ -131,12 +138,22 @@ describe('getBooks$ effect', () => {
     const error = 'Some error';
     const outcome = retrieveBooksListFailureAction({ error: error });
 
+    // Set the stream of actions to emit the retrieveBooksListAction
     actions.stream = hot('-a', { a: action });
+
+    // Create a cold response observable that emits an error
     const response = cold('-#|', {}, error);
+
+    // Create the expected observable that emits the retrieveBooksListFailureAction
     const expected = cold('--b', { b: outcome });
+
+    // Mock the service's getBooks method to return the error response observable
     booksService.getBooks = jest.fn(() => response);
 
+    // Assert that the getBooks$ effect's observable matches the expected observable
     expect(booksEffects.getBooks$).toBeObservable(expected);
+
+    // Assert that the getBooks method was called
     expect(booksService.getBooks).toHaveBeenCalled();
   });
 });
