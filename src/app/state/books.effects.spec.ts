@@ -1,9 +1,9 @@
 import { HttpClientTestingModule } from "@angular/common/http/testing";
-import { TestBed } from "@angular/core/testing";
+import { async, TestBed } from "@angular/core/testing";
 import { Actions, EffectsModule } from "@ngrx/effects";
 import { StoreModule } from "@ngrx/store";
 import { cold, hot } from "jasmine-marbles";
-import { BehaviorSubject, empty, Observable, of } from "rxjs";
+import { empty, Observable, of, throwError } from "rxjs";
 import { Book } from "../book-list/book.model";
 import { GoogleBooksService } from "../book-list/books.service";
 import {
@@ -61,6 +61,47 @@ describe('getBooks$ effect', () => {
 
   });
 
+  it('should retrieve books (without marble testing)', async(() => {
+    let book: Book = { id: '1', volumeInfo: { title: 'Book 1', authors: ['Mocked Author'] } };
+    const mockBooks = [book];
+
+    const action = retrieveBooksListAction();
+    const outcome = retrieveBooksListSuccessAction({ books: mockBooks });
+
+    // mock the service's getBooks method
+    booksService.getBooks = jest.fn(() => of(mockBooks));
+    // set the actions stream to the retrieveBooksListAction
+    actions.stream = of(action);
+
+    booksEffects.getBooks$.subscribe(result => {
+      expect(result).toEqual(outcome);
+      expect(booksService.getBooks).toHaveBeenCalled();
+    });
+  }));
+
+
+
+  it('should handle errors when retrieving books (without marble testing)', async () => {
+    const error = 'Error occurred while retrieving books';
+
+    const action = retrieveBooksListAction();
+    const outcome = retrieveBooksListFailureAction({ error });
+
+    // Dispatch the action
+    actions.stream = of(action);
+
+    // Return an error from the service
+    booksService.getBooks = jest.fn(() => throwError(error));
+
+    // Subscribing to the effect should return the expected outcome
+    booksEffects.getBooks$.subscribe(result => {
+      expect(result).toEqual(outcome);
+    });
+
+    // The service's getBooks method should have been called
+    expect(booksService.getBooks).toHaveBeenCalled();
+  });
+
   it('should retrieve books', () => {
     let book: Book = { id: '1', volumeInfo: { title: 'Book 1', authors: ['Mocked Author'] } };
     const mockBooks = [book];
@@ -77,7 +118,7 @@ describe('getBooks$ effect', () => {
     expect(booksService.getBooks).toHaveBeenCalled();
   });
 
-  it('should catch errors', () => {
+  it('should handle errors when retrieving books', () => {
     const action = retrieveBooksListAction();
     const error = 'Some error';
     const outcome = retrieveBooksListFailureAction({ error: error });
@@ -90,5 +131,4 @@ describe('getBooks$ effect', () => {
     expect(booksEffects.getBooks$).toBeObservable(expected);
     expect(booksService.getBooks).toHaveBeenCalled();
   });
-
 });
