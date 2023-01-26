@@ -1,9 +1,13 @@
 import { Injectable } from "@angular/core";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
-import { catchError, EMPTY, switchMap } from "rxjs";
+import { catchError, EMPTY, of, switchMap } from "rxjs";
 import { map } from "rxjs/operators";
 import { GoogleBooksService } from "../book-list/books.service";
-import { retrieveBooksListAction, retrieveBooksListSuccessAction } from "./books.actions";
+import {
+  retrieveBooksListAction,
+  retrieveBooksListFailureAction,
+  retrieveBooksListSuccessAction
+} from "./books.actions";
 
 @Injectable()
 export class BooksEffects {
@@ -16,15 +20,12 @@ export class BooksEffects {
           map(books => {
             return retrieveBooksListSuccessAction({ books: books })
           }),
-          catchError(() => EMPTY)
+          catchError(error => of(retrieveBooksListFailureAction({ error: error })))
         );
       })
     )
   );
 
-  get actions(): Actions {
-    return this.actions$;
-  }
 
   constructor(
     private actions$: Actions,

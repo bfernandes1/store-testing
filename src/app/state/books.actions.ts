@@ -17,4 +17,8 @@ export const retrieveBooksListSuccessAction = createAction(
   'Retrieved Book List',
   props<{ books: ReadonlyArray<Book> }>()
 );
+export const retrieveBooksListFailureAction = createAction(
+  'Retrieved Error from BookService',
+  props<{ error: string }>()
+);
 

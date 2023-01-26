@@ -6,7 +6,11 @@ import { cold, hot } from "jasmine-marbles";
 import { BehaviorSubject, empty, Observable, of } from "rxjs";
 import { Book } from "../book-list/book.model";
 import { GoogleBooksService } from "../book-list/books.service";
-import { retrieveBooksListAction, retrieveBooksListSuccessAction } from "./books.actions";
+import {
+  retrieveBooksListAction,
+  retrieveBooksListFailureAction,
+  retrieveBooksListSuccessAction
+} from "./books.actions";
 import { BooksEffects } from "./books.effects";
 
 export class TestActions extends Actions {
@@ -66,6 +70,20 @@ describe('getBooks$ effect', () => {
 
     actions.stream = hot('-a', { a: action });
     const response = cold('-a|', { a: mockBooks });
+    const expected = cold('--b', { b: outcome });
+    booksService.getBooks = jest.fn(() => response);
+
+    expect(booksEffects.getBooks$).toBeObservable(expected);
+    expect(booksService.getBooks).toHaveBeenCalled();
+  });
+
+  it('should catch errors', () => {
+    const action = retrieveBooksListAction();
+    const error = 'Some error';
+    const outcome = retrieveBooksListFailureAction({ error: error });
+
+    actions.stream = hot('-a', { a: action });
+    const response = cold('-#|', {}, error);
     const expected = cold('--b', { b: outcome });
     booksService.getBooks = jest.fn(() => response);
 
