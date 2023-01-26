@@ -65,33 +65,41 @@ describe('getBooks$ effect', () => {
     let book: Book = { id: '1', volumeInfo: { title: 'Book 1', authors: ['Mocked Author'] } };
     const mockBooks = [book];
 
+    // Create the action that will trigger the effect
     const action = retrieveBooksListAction();
+    // Create the expected outcome action that will be dispatched to the store
     const outcome = retrieveBooksListSuccessAction({ books: mockBooks });
 
-    // mock the service's getBooks method
+    // mock the service's getBooks method to return the mocked books
     booksService.getBooks = jest.fn(() => of(mockBooks));
     // set the actions stream to the retrieveBooksListAction
     actions.stream = of(action);
 
+    // subscribe to the getBooks$ effect
     booksEffects.getBooks$.subscribe(result => {
+      // assert that the result of the effect is the expected outcome
       expect(result).toEqual(outcome);
+      // assert that the service's getBooks method has been called
       expect(booksService.getBooks).toHaveBeenCalled();
     });
   }));
 
 
 
+
   it('should handle errors when retrieving books (without marble testing)', async () => {
     const error = 'Error occurred while retrieving books';
-
+    // Create the action that will trigger the effect
     const action = retrieveBooksListAction();
+    // Create the expected outcome action that will be dispatched to the store
     const outcome = retrieveBooksListFailureAction({ error });
 
-    // Dispatch the action
+    // mock the service's getBooks method to return the mocked books
+    booksService.getBooks = jest.fn(() => throwError(error));
+
+    // set the actions stream to the retrieveBooksListAction
     actions.stream = of(action);
 
-    // Return an error from the service
-    booksService.getBooks = jest.fn(() => throwError(error));
 
     // Subscribing to the effect should return the expected outcome
     booksEffects.getBooks$.subscribe(result => {
